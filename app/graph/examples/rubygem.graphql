@@ -1,0 +1,12 @@
+type Rubygem {
+  name: String!
+  downloads: Int!
+  versions: [Version]
+}
+
+query {
+  rubygem(name:"graphql") {
+    name
+    downloads
+  }
+}
