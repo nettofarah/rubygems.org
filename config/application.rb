@@ -31,6 +31,7 @@ module Gemcutter
     config.plugins = [:dynamic_form]
 
     config.autoload_paths << Rails.root.join('lib')
+    config.autoload_paths << Rails.root.join('/app/graph')
   end
 
   def self.config
