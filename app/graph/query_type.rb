@@ -1,3 +1,5 @@
+require 'graphql/query_resolver'
+
 QueryType = GraphQL::ObjectType.define do
   name "Query"
   description "The query root of this schema"
@@ -16,7 +18,9 @@ QueryType = GraphQL::ObjectType.define do
     type types[RubygemType]
 
     resolve -> (obj, args, ctx) {
-      Rubygem.all
+      GraphQL::QueryResolver.run(Rubygem, ctx, RubygemType) do
+        Rubygem.all
+      end
     }
   end
 end

@@ -1,32 +1,11 @@
-QueryType = GraphQL::ObjectType.define do
-  name "Query"
-  description "The query root of this schema"
-
-  field :rubygem do
-    type RubygemType
-    argument :name, !types.String
-
-    resolve -> (obj, args, ctx) {
-      name = args[:name]
-      Rubygem.find_by(name: name)
-    }
-  end
-
-  field :rubygems do
-    type types[RubygemType]
-
-    resolve -> (obj, args, ctx) {
-      Rubygem.all
-    }
-  end
-end
-
+# Add more fields
 RubygemType = GraphQL::ObjectType.define do
   name "Rubygem"
 
   field :name, !types.String
   field :created_at, types.String
 
+  # with custom resolve blocks
   field :versions do
     type types[VersionType]
 
@@ -39,6 +18,7 @@ RubygemType = GraphQL::ObjectType.define do
   field :downloads, types.Int
 end
 
+# More types
 VersionType = GraphQL::ObjectType.define do
   name "Version"
   description "a specific version of a rubygem"

@@ -13,7 +13,7 @@
 #
 #   NewrelicInstrumenter::instrument_document(@document)
 #
-#
+
 # In your GraphQL schema file
 #  instrument(:field, NewrelicInstrumenter.new)
 
