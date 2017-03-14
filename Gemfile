@@ -46,6 +46,7 @@ gem 'compact_index', '~> 0.11.0'
 gem 'sprockets-rails'
 gem 'rack-attack'
 gem 'graphql'
+gem 'graphql-query-resolver'
 
 # Logging
 gem 'lograge'

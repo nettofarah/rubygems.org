@@ -141,7 +141,9 @@ GEM
     gchartrb (0.8)
     globalid (0.3.7)
       activesupport (>= 4.1.0)
-    graphql (1.5.1)
+    graphql (1.0.0)
+    graphql-query-resolver (0.1.1)
+      graphql (~> 1.0.0)
     gravtastic (3.2.6)
     hashie (3.4.4)
     high_voltage (3.0.0)
@@ -316,6 +318,7 @@ DEPENDENCIES
   factory_girl_rails
   gchartrb
   graphql
+  graphql-query-resolver
   gravtastic
   high_voltage
   highline
