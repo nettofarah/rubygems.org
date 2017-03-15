@@ -29,14 +29,6 @@ VersionType = GraphQL::ObjectType.define do
   field :summary, types.String
   field :latest, types.Boolean
 
-  field :downloads do
-    type types.Int
-
-    resolve -> (obj, args, ctx) {
-      obj.downloads_count
-    }
-  end
-
   field :dependencies do
     type types[DependencyType]
 

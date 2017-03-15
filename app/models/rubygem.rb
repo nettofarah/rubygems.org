@@ -126,7 +126,8 @@ class Rubygem < ActiveRecord::Base
   end
 
   def downloads
-    gem_download.try(:count) || 0
+    # gem_download.try(:count) || 0
+    0
   end
 
   def links(version = versions.most_recent)
