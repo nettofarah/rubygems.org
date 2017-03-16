@@ -1,75 +1,28 @@
-require 'graphql/query_resolver'
-
-QueryType = GraphQL::ObjectType.define do
-  name "Query"
-  description "The query root of this schema. Here's where we define all our top level queries."
-
-  field :rubygems do
-    type types[RubygemType]
-    description "Loads a collection of all available rubygems"
-
-    resolve -> (obj, args, ctx) {
-      Rubygem.all
-      # GraphQL::QueryResolver.run(Rubygem, ctx, RubygemType) do
-      # end
-    }
-  end
-
-  field :rubygem do
-    type RubygemType
-    description "Looks up a specific Rubygem by name"
-    argument :name, !types.String
-
-    resolve -> (obj, args, ctx) {
-      name = args[:name]
-      Rubygem.find_by(name: name)
-    }
-  end
-end
-
 RubygemType = GraphQL::ObjectType.define do
   name "Rubygem"
   description "A package of ruby code with specific functionality"
 
-  field :name, !types.String
-  field :latest_version, VersionType, "The latest published version of this Rubygem"
+  field :name, types.String
   field :downloads, types.Int, "The number of downloads for this Rubygem"
 
-  field :versions do
-    type types[VersionType]
-    description "All versions of this Rubygem ever published"
-
-    resolve -> (obj, args, ctx) {
-      obj.versions
-    }
-  end
+  # Complex type: an array of Versions
+  field :versions, types[VersionType], "All versions ever published for this Rubygem"
 end
 
 VersionType = GraphQL::ObjectType.define do
   name "Version"
   description "A specific version of a Rubygem"
 
-  field :authors, types.String
-  field :description, types.String
+  field :authors, types.String, "Author list separated by comma"
   field :number, types.String, "The version number"
-  field :summary, types.String
-  field :latest, types.Boolean, "Is this the latest version of this Rubygem?"
+  field :dependencies, types[DependencyType], "All gem dependencies in this specific Version"
 
   field :downloads do
     type types.Int
     description "The number of downloads for this specific Version"
 
-    resolve -> (obj, args, ctx) {
-      obj.downloads_count
-    }
-  end
-
-  field :dependencies do
-    type types[DependencyType]
-    description "All gem dependencies in this specific Version"
-
-    resolve -> (obj, args, ctx) {
-      obj.dependencies
+    resolve -> (version, args, ctx) {
+      version.downloads_count
     }
   end
 end
@@ -78,8 +31,38 @@ DependencyType = GraphQL::ObjectType.define do
   name "Dependency"
   description "A dependency for a specific version of a given Rubygem"
 
-  field :requirements, types.String, "The version range used for this dependency"
-  field :scope, types.String, "How is this dependency used"
   field :name, types.String, "Name of the Rubygem used as a dependency"
-  field :rubygem, RubygemType, "A pointer to the actual Rubygem for this dependency"
+  field :requirements, types.String, "The version range used for this dependency"
+end
+
+# And now to queries
+QueryType = GraphQL::ObjectType.define do
+  name "Query"
+  description "The query root of this schema. Here's where we define all our top level queries."
+
+  field :rubygems do
+    type types[RubygemType]
+    description "Loads a collection of all available rubygems"
+
+    resolve -> (_, args, ctx) {
+      # We're using ActiveRecord here.
+      # this is where the operation goes
+
+      Rubygem.all.order(:name)
+      # I can customize this block any way that I can.
+      # Think of this as "controllers" or entrypoints in your traditional API
+      # Rubygem.all.order(:created_at)
+    }
+  end
+
+  field :by_name do
+    type RubygemType
+    description "Looks up a specific Rubygem by name"
+    argument :name, !types.String
+
+    resolve -> (_, args, ctx) {
+      name = args[:name]
+      Rubygem.find_by(name: name)
+    }
+  end
 end
