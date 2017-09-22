@@ -7,12 +7,12 @@ class UserTest < ActiveSupport::TestCase
     end
   end
 
-  should have_many(:ownerships)
+  should have_many(:ownerships).dependent(:destroy)
   should have_many(:rubygems).through(:ownerships)
   should have_many(:subscribed_gems).through(:subscriptions)
   should have_many(:deletions)
-  should have_many(:subscriptions)
-  should have_many(:web_hooks)
+  should have_many(:subscriptions).dependent(:destroy)
+  should have_many(:web_hooks).dependent(:destroy)
 
   context "validations" do
     context "handle" do
@@ -51,6 +51,14 @@ class UserTest < ActiveSupport::TestCase
 
         user.handle = "bills"
         assert_equal "bills", user.display_handle
+      end
+    end
+
+    context 'email' do
+      should "be less than 255 characters" do
+        user = build(:user, email: ("a" * 255) + "@example.com")
+        refute user.valid?
+        assert_contains user.errors[:email], "is too long (maximum is 254 characters)"
       end
     end
 
@@ -120,7 +128,7 @@ class UserTest < ActiveSupport::TestCase
     should "have email and handle on XML" do
       xml = Nokogiri.parse(@user.to_xml)
       assert_equal "user", xml.root.name
-      assert_equal %w(id handle email), xml.root.children.select(&:element?).map(&:name)
+      assert_equal %w[id handle email], xml.root.children.select(&:element?).map(&:name)
       assert_equal @user.email, xml.at_css("email").content
     end
 
@@ -260,6 +268,11 @@ class UserTest < ActiveSupport::TestCase
       @rubygems.first.versions.first.update! indexed: false
       assert_equal @user.total_rubygems_count, 2
     end
+
+    should "not include gems with more than one owner" do
+      @rubygems.first.owners << create(:user)
+      assert_equal 2, @user.only_owner_gems.count
+    end
   end
 
   context "yaml" do
@@ -273,6 +286,77 @@ class UserTest < ActiveSupport::TestCase
 
     should "nest properly" do
       assert_equal [@user.payload], YAML.safe_load([@user].to_yaml)
+    end
+  end
+
+  context "destroy" do
+    setup do
+      @user = create(:user)
+      @rubygem = create(:rubygem)
+      create(:ownership, rubygem: @rubygem, user: @user)
+      @version = create(:version, rubygem: @rubygem)
+    end
+
+    context "user is only owner of gem" do
+      should "record deletion" do
+        assert_difference 'Deletion.count', 1 do
+          @user.destroy
+        end
+      end
+      should "mark rubygem unowned" do
+        @user.destroy
+        assert @rubygem.unowned?
+      end
+    end
+
+    context "user has co-owner of gem" do
+      setup do
+        @rubygem.ownerships.create(user: create(:user))
+      end
+
+      should "not record deletion" do
+        assert_no_difference 'Deletion.count' do
+          @user.destroy
+        end
+      end
+      should "not mark rubygem unowned" do
+        @user.destroy
+        refute @rubygem.unowned?
+      end
+    end
+  end
+
+  context "#remember_me!" do
+    setup do
+      @user = create(:user)
+      @user.remember_me!
+    end
+
+    should "set remember_token" do
+      assert_not_nil @user.remember_token
+    end
+
+    should "set expiry of remember_token to two weeks from now" do
+      expected_expiry = Gemcutter::REMEMBER_FOR.from_now
+      assert_in_delta expected_expiry, @user.remember_token_expires_at, 1.second
+    end
+  end
+
+  context "#remember_me?" do
+    setup { @user = create(:user) }
+
+    should "return false when remember_token_expires_at is not set" do
+      refute @user.remember_me?
+    end
+
+    should "return false when remember_token has expired" do
+      @user.update_attribute(:remember_token_expires_at, 1.second.ago)
+      refute @user.remember_me?
+    end
+
+    should "return true when remember_token has not expired" do
+      @user.update_attribute(:remember_token_expires_at, 1.second.from_now)
+      assert @user.remember_me?
     end
   end
 end

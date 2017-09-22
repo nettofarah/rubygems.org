@@ -17,10 +17,13 @@ zh-CN:
   time_ago: "%{duration} 前"
   title: RubyGems.org
   update: 更新
+  try_again:
+  advanced_search:
   activerecord:
     attributes:
       linkset:
         bugs:
+        changelog:
         code: 源代码 URL
         docs: 文档 URL
         mail: 邮件列表 URL
@@ -51,8 +54,6 @@ zh-CN:
       submit:
       title:
       will_email_notice:
-    unconfirmed_email:
-      try_again:
     update:
       confirmed_email:
   home:
@@ -101,6 +102,20 @@ zh-CN:
       welcome_message:
     email_reset:
       visit_link_instructions:
+      link_expiration_explanation:
+    deletion_complete:
+      subject:
+      body:
+    deletion_failed:
+      subject:
+      body:
+  news:
+    show:
+      title:
+      all_gems:
+      popular_gems:
+    popular:
+      title:
   pages:
     about:
       founding: 此项目创立由 %{founder} 于2009年4月，发展过程中有超过 %{contributors} 贡献者以及 %{downloads}。自从 RubyGems 1.3.6 发布以后，本站名称由 Gemcutter 改名为 %{title}，从而巩固在 Ruby 社区网站中和核心作用。
@@ -138,10 +153,24 @@ zh-CN:
         link_text: 这里找回密码
         text: 需要一个新密码？没问题，访问 %{link}
         title: 重置密码
+      delete:
+        delete:
+        delete_profile:
+        warning:
+    delete:
+      title:
+      confirm:
+      instructions:
+      list_only_owner:
+      list_multi_owner:
+    rubygem:
+      owners_header:
+    destroy:
+      request_queued:
     update:
       confirmation_mail_sent:
-      request_denied:
       updated:
+    request_denied:
   rubygems:
     aside:
       bundler_header: Gemfile
@@ -154,6 +183,7 @@ zh-CN:
       links:
         badge: 徽章
         bugs:
+        changelog:
         code: 源代码
         docs: 文档
         download: 下载
@@ -199,6 +229,12 @@ zh-CN:
     reverse_dependencies:
       search_reverse_dependencies:
   searches:
+    advanced:
+      name:
+      summary:
+      description:
+      downloads:
+      updated:
     show:
       exact_match: 精确匹配
       subtitle: "%{query}"

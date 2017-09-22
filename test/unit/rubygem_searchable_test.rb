@@ -39,6 +39,22 @@ class RubygemSearchableTest < ActiveSupport::TestCase
     end
   end
 
+  context 'rubygems analyzer' do
+    setup do
+      create(:rubygem, name: 'example-gem', number: '0.0.1')
+      create(:rubygem, name: 'example_1', number: '0.0.1')
+      create(:rubygem, name: 'example.rb', number: '0.0.1')
+      import_and_refresh
+    end
+
+    should 'find all gems with matching tokens' do
+      response = Rubygem.elastic_search "example"
+      assert_equal 3, response.results.size
+      results = %w[example-gem example_1 example.rb]
+      assert_equal results, response.results.map(&:name)
+    end
+  end
+
   context 'filter' do
     setup do
       example_1 = create(:rubygem, name: "example_1")
@@ -61,15 +77,15 @@ class RubygemSearchableTest < ActiveSupport::TestCase
       example_gem1 = create(:rubygem, name: "keyword", downloads: 1)
       example_gem2 = create(:rubygem, name: "example_gem2", downloads: 1)
       example_gem3 = create(:rubygem, name: "example_gem3", downloads: 1)
-      create(:version, rubygem: example_gem1)
-      create(:version, rubygem: example_gem2, description: 'some text and keyword')
-      create(:version, rubygem: example_gem3, summary: 'some keyword')
+      create(:version, rubygem: example_gem1, description: 'some', summary: 'some')
+      create(:version, rubygem: example_gem2, description: 'keyword', summary: 'some')
+      create(:version, rubygem: example_gem3, summary: 'keyword', description: 'some')
       import_and_refresh
     end
 
     should "look for keyword in name, summary and description and order them in same priority order" do
       response = Rubygem.elastic_search "keyword"
-      names_order = %w(keyword example_gem3 example_gem2)
+      names_order = %w[keyword example_gem3 example_gem2]
       assert_equal names_order, response.results.map(&:name)
     end
   end
@@ -85,7 +101,7 @@ class RubygemSearchableTest < ActiveSupport::TestCase
 
     should "boost score of result by downloads count" do
       response = Rubygem.elastic_search "gem"
-      names_order = %w(gem_30 gem_20 gem_10)
+      names_order = %w[gem_30 gem_20 gem_10]
       assert_equal names_order, response.results.map(&:name)
     end
   end
@@ -123,7 +139,7 @@ class RubygemSearchableTest < ActiveSupport::TestCase
 
     should "suggest names of possible gems" do
       response = Rubygem.elastic_search "keywor"
-      suggestions = %w(keyword keywo keywordo)
+      suggestions = %w[keyword keywo keywordo]
       assert_equal suggestions, response.suggestions.terms
     end
   end
@@ -238,7 +254,7 @@ class RubygemSearchableTest < ActiveSupport::TestCase
 
     context "query order" do
       setup do
-        %w(rails-async async-rails).each do |gem_name|
+        %w[rails-async async-rails].each do |gem_name|
           rubygem = create(:rubygem, name: gem_name, downloads: 10)
           create(:version, rubygem: rubygem)
         end

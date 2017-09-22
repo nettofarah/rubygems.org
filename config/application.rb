@@ -1,4 +1,4 @@
-require File.expand_path('../boot', __FILE__)
+require_relative 'boot'
 
 require 'rails/all'
 require 'elasticsearch/rails/instrumentation'
@@ -17,12 +17,10 @@ module Gemcutter
     config.i18n.fallbacks = true
 
     config.middleware.insert 0, Rack::UTF8Sanitizer
-    config.middleware.use "Redirector" unless Rails.env.development?
     config.middleware.use Rack::Attack
     config.middleware.use Rack::Deflater
 
     config.active_record.include_root_in_json = false
-    config.active_record.raise_in_transactional_callbacks = true
 
     config.after_initialize do
       RubygemFs.s3! ENV['S3_PROXY'] if ENV['S3_PROXY']
@@ -30,8 +28,8 @@ module Gemcutter
 
     config.plugins = [:dynamic_form]
 
-    config.autoload_paths << Rails.root.join('lib')
-    config.autoload_paths << Rails.root.join('/app/graph')
+    config.eager_load_paths << Rails.root.join('app/graph')
+    config.eager_load_paths << Rails.root.join('lib')
   end
 
   def self.config
@@ -40,4 +38,6 @@ module Gemcutter
 
   PROTOCOL = config['protocol']
   HOST = config['host']
+  DEFAULT_PAGINATION = 20
+  REMEMBER_FOR = 2.weeks
 end

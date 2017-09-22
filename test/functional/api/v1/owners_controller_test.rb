@@ -18,7 +18,7 @@ class Api::V1::OwnersControllerTest < ActionController::TestCase
         @rubygem.ownerships.create(user: @user)
 
         @request.env["HTTP_AUTHORIZATION"] = @user.api_key
-        get :show, rubygem_id: @rubygem.to_param, format: format
+        get :show, params: { rubygem_id: @rubygem.to_param }, format: format
       end
 
       should "return an array" do
@@ -51,7 +51,7 @@ class Api::V1::OwnersControllerTest < ActionController::TestCase
   context "on GET to owner gems with handle" do
     setup do
       @user = create(:user)
-      get :gems, handle: @user.handle, format: :json
+      get :gems, params: { handle: @user.handle }, format: :json
     end
 
     should respond_with :success
@@ -60,7 +60,7 @@ class Api::V1::OwnersControllerTest < ActionController::TestCase
   context "on GET to owner gems with id" do
     setup do
       @user = create(:user)
-      get :gems, handle: @user.id, format: :json
+      get :gems, params: { handle: @user.id }, format: :json
     end
 
     should respond_with :success
@@ -85,12 +85,12 @@ class Api::V1::OwnersControllerTest < ActionController::TestCase
     end
 
     should "add other user as gem owner with email" do
-      post :create, rubygem_id: @rubygem.to_param, email: @second_user.email, format: :json
+      post :create, params: { rubygem_id: @rubygem.to_param, email: @second_user.email }, format: :json
       assert @rubygem.owners.include?(@second_user)
     end
 
     should "add other user as gem owner with handle" do
-      post :create, rubygem_id: @rubygem.to_param, email: @third_user.handle, format: :json
+      post :create, params: { rubygem_id: @rubygem.to_param, email: @third_user.handle }, format: :json
       assert @rubygem.owners.include?(@third_user)
     end
   end
@@ -101,6 +101,30 @@ class Api::V1::OwnersControllerTest < ActionController::TestCase
               rubygem_id: "rails",
               format: "json" }
     assert_recognizes(route, path: '/api/v1/gems/rails/owners.json', method: :delete)
+  end
+
+  context "on DELETE to owner gem" do
+    setup do
+      @rubygem = create(:rubygem)
+      @user = create(:user)
+      @second_user = create(:user)
+      @rubygem.ownerships.create(user: @user)
+      @ownership = @rubygem.ownerships.create(user: @second_user)
+      @request.env["HTTP_AUTHORIZATION"] = @user.api_key
+    end
+
+    should "remove user as gem owner" do
+      delete :destroy,
+        params: { rubygem_id: @rubygem.to_param, email: @second_user.email, format: :json }
+      refute @rubygem.owners.include?(@second_user)
+    end
+
+    should "not remove last gem owner" do
+      @ownership.destroy
+      delete :destroy, params: { rubygem_id: @rubygem.to_param, email: @user.email, format: :json }
+      assert @rubygem.owners.include?(@user)
+      assert_equal 'Unable to remove owner.', @response.body
+    end
   end
 
   should "route GET gems" do
@@ -115,7 +139,7 @@ class Api::V1::OwnersControllerTest < ActionController::TestCase
     @user = create(:user)
     @request.env["HTTP_AUTHORIZATION"] = @user.api_key
     @request.accept = '*/*'
-    post :create, rubygem_id: 'bananas'
+    post :create, params: { rubygem_id: 'bananas' }
     assert_equal 'This rubygem could not be found.', @response.body
   end
 end

@@ -5,7 +5,7 @@ class ApplicationController < ActionController::Base
   helper :announcements
   helper ActiveSupport::NumberHelper
 
-  protect_from_forgery only: [:create, :update, :destroy], with: :exception
+  protect_from_forgery only: %i[create update destroy], with: :exception
 
   before_action :set_locale
 
@@ -13,12 +13,13 @@ class ApplicationController < ActionController::Base
   before_action :set_csp
 
   def set_csp
-    response.headers['Content-Security-Policy-Report-Only'] = "default-src 'self'; "\
+    response.headers['Content-Security-Policy'] = "default-src 'self'; "\
       "script-src 'self' https://secure.gaug.es; "\
       "style-src 'self' https://fonts.googleapis.com; "\
-      "img-src 'self' https://secure.gaug.es https://gravatar.com; "\
-      "font-src https://fonts.gstatic.com; "\
-      "connect-src https://s3-us-west-2.amazonaws.com/rubygems-dumps/;"
+      "img-src 'self' https://secure.gaug.es https://gravatar.com https://secure.gravatar.com; "\
+      "font-src 'self' https://fonts.gstatic.com; "\
+      "connect-src https://s3-us-west-2.amazonaws.com/rubygems-dumps/; "\
+      "frame-src https://ghbtns.com"
   end
 
   def set_locale

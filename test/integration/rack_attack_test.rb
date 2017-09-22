@@ -14,7 +14,8 @@ class RackAttackTest < ActionDispatch::IntegrationTest
   context 'requests is lower than limit' do
     should 'allow sign in' do
       10.times do
-        post_via_redirect '/session', session: { who: @user.email, password: @user.password }
+        post '/session', params: { session: { who: @user.email, password: @user.password } }
+        follow_redirect!
         assert_equal 200, @response.status
       end
     end
@@ -22,33 +23,34 @@ class RackAttackTest < ActionDispatch::IntegrationTest
     should 'allow sign up' do
       10.times do
         user = build(:user)
-        post_via_redirect '/users', user: { email: user.email, password: user.password }
+        post '/users', params: { user: { email: user.email, password: user.password } }
+        follow_redirect!
         assert_equal 200, @response.status
       end
     end
 
     should 'allow forgot password' do
       10.times do
-        post '/passwords', password: { email: @user.email }
+        post '/passwords', params: { password: { email: @user.email } }
         assert_equal 200, @response.status
       end
     end
 
     should 'allow api_key show' do
       10.times do
-        get '/api/v1/api_key.json', nil, 'HTTP_AUTHORIZATION' => encode(@user.handle, @user.password)
+        get '/api/v1/api_key.json', env: { 'HTTP_AUTHORIZATION' => encode(@user.handle, @user.password) }
         assert_equal 200, @response.status
       end
     end
 
     context 'params' do
       should 'return 400 for bad request' do
-        post_via_redirect '/session'
+        post '/session'
         assert_equal 400, @response.status
       end
 
       should 'return 401 for unauthorized request' do
-        post_via_redirect '/session', session: { password: @user.password }
+        post '/session', params: { session: { password: @user.password } }
         assert_equal 401, @response.status
       end
     end
@@ -57,30 +59,48 @@ class RackAttackTest < ActionDispatch::IntegrationTest
   context 'requests is higher than limit' do
     should 'throttle sign in' do
       (@limit + 1).times do |i|
-        post_via_redirect '/session', session: { who: @user.email, password: @user.password }
-        assert_equal 429, @response.status if i > @limit
+        post '/session', params: { session: { who: @user.email, password: @user.password } }
+        assert_equal 429, @response.status if i == @limit
       end
     end
 
     should 'throttle sign up' do
       (@limit + 1).times do |i|
         user = build(:user)
-        post_via_redirect '/users', user: { email: user.email, password: user.password }
-        assert_equal 429, @response.status if i > @limit
+        post '/users', params: { user: { email: user.email, password: user.password } }
+        assert_equal 429, @response.status if i == @limit
       end
     end
 
     should 'throttle forgot password' do
       (@limit + 1).times do |i|
-        post '/passwords', password: { email: @user.email }
-        assert_equal 429, @response.status if i > @limit
+        post '/passwords', params: { password: { email: @user.email } }
+        assert_equal 429, @response.status if i == @limit
       end
     end
 
     should 'throttle api_key show' do
       (@limit + 1).times do |i|
-        get '/api/v1/api_key.json', nil, 'HTTP_AUTHORIZATION' => encode(@user.handle, @user.password)
-        assert_equal 429, @response.status if i > @limit
+        get '/api/v1/api_key.json', env: { 'HTTP_AUTHORIZATION' => encode(@user.handle, @user.password) }
+        assert_equal 429, @response.status if i == @limit
+      end
+    end
+
+    should "throttle profile update" do
+      cookies[:remember_token] = @user.remember_token
+
+      (@limit + 1).times do |i|
+        patch "/profile"
+        assert_equal 429, @response.status if i == @limit
+      end
+    end
+
+    should "throttle profile delete" do
+      cookies[:remember_token] = @user.remember_token
+
+      (@limit + 1).times do |i|
+        delete "/profile"
+        assert_equal 429, @response.status if i == @limit
       end
     end
   end

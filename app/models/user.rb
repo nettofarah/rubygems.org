@@ -1,30 +1,33 @@
-class User < ActiveRecord::Base
+class User < ApplicationRecord
   include Clearance::User
   include Gravtastic
   is_gravtastic default: "retro"
 
-  PERMITTED_ATTRS = [
-    :bio,
-    :email,
-    :handle,
-    :hide_email,
-    :location,
-    :password,
-    :website,
-    :twitter_username
+  PERMITTED_ATTRS = %i[
+    bio
+    email
+    handle
+    hide_email
+    location
+    password
+    website
+    twitter_username
   ].freeze
 
+  before_destroy :yank_gems
   has_many :rubygems, through: :ownerships
 
   has_many :subscribed_gems, -> { order("name ASC") }, through: :subscriptions, source: :rubygem
 
   has_many :deletions
-  has_many :ownerships
-  has_many :subscriptions
-  has_many :web_hooks
+  has_many :ownerships, dependent: :destroy
+  has_many :subscriptions, dependent: :destroy
+  has_many :web_hooks, dependent: :destroy
 
   after_validation :set_unconfirmed_email, if: :email_changed?, on: :update
   before_create :generate_api_key, :generate_confirmation_token
+
+  validates :email, length: { maximum: 254 }
 
   validates :handle, uniqueness: true, allow_nil: true
   validates :handle, format: {
@@ -142,6 +145,22 @@ class User < ActiveRecord::Base
     !email_confirmed
   end
 
+  def only_owner_gems
+    rubygems.with_versions.where('rubygems.id IN (
+      SELECT rubygem_id FROM ownerships GROUP BY rubygem_id HAVING count(rubygem_id) = 1)')
+  end
+
+  def remember_me!
+    self.remember_token = Clearance::Token.new
+    self.remember_token_expires_at = Gemcutter::REMEMBER_FOR.from_now
+    save!(validate: false)
+    remember_token
+  end
+
+  def remember_me?
+    remember_token_expires_at && remember_token_expires_at > Time.zone.now
+  end
+
   private
 
   def update_email!
@@ -155,5 +174,12 @@ class User < ActiveRecord::Base
 
   def unconfirmed_email_exists?
     User.where(unconfirmed_email: email).exists?
+  end
+
+  def yank_gems
+    versions_to_yank = only_owner_gems.map(&:versions).flatten
+    versions_to_yank.each do |v|
+      deletions.create(version: v)
+    end
   end
 end

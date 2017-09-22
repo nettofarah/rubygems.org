@@ -17,10 +17,13 @@ pt-BR:
   time_ago: "%{duration} atrás"
   title: RubyGems.org
   update: Atualizar
+  try_again:
+  advanced_search:
   activerecord:
     attributes:
       linkset:
         bugs: URL do Bug Tracker
+        changelog:
         code: URL do Código Fonte
         docs: URL da Documentação
         mail: URL da Lista de Emails
@@ -51,8 +54,6 @@ pt-BR:
       submit:
       title:
       will_email_notice:
-    unconfirmed_email:
-      try_again:
     update:
       confirmed_email:
   home:
@@ -101,6 +102,20 @@ pt-BR:
       welcome_message:
     email_reset:
       visit_link_instructions:
+      link_expiration_explanation:
+    deletion_complete:
+      subject:
+      body:
+    deletion_failed:
+      subject:
+      body:
+  news:
+    show:
+      title:
+      all_gems:
+      popular_gems:
+    popular:
+      title:
   pages:
     about:
       founding: Este projeto foi iniciado em Abril de 2009 por %{founder}, e desde então tem crescido para incluir as contribuições de %{contributors} e %{downloads}. A partir do lançamento do RubyGems 1.3.6 o site foi renomeado de Gemcutter para %{title} para solidificar o papel centra do site na comunidade Ruby.
@@ -138,10 +153,24 @@ pt-BR:
         link_text: Solicitar uma nova senha.
         text: Esqueceu sua senha? Sem problema. %{link}
         title: Resetar senha
+      delete:
+        delete:
+        delete_profile:
+        warning:
+    delete:
+      title:
+      confirm:
+      instructions:
+      list_only_owner:
+      list_multi_owner:
+    rubygem:
+      owners_header:
+    destroy:
+      request_queued:
     update:
       confirmation_mail_sent:
-      request_denied:
       updated:
+    request_denied:
   rubygems:
     aside:
       bundler_header: Gemfile
@@ -154,6 +183,7 @@ pt-BR:
       links:
         badge: Badge
         bugs:
+        changelog:
         code: Código Fonte
         docs: Documentação
         download: Download
@@ -199,6 +229,12 @@ pt-BR:
     reverse_dependencies:
       search_reverse_dependencies:
   searches:
+    advanced:
+      name:
+      summary:
+      description:
+      downloads:
+      updated:
     show:
       exact_match: Busca exata
       subtitle: para %{query}

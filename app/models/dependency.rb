@@ -1,4 +1,4 @@
-class Dependency < ActiveRecord::Base
+class Dependency < ApplicationRecord
   belongs_to :rubygem
   belongs_to :version
 
@@ -7,7 +7,7 @@ class Dependency < ActiveRecord::Base
     :parse_gem_dependency
 
   validates :requirements, presence: true
-  validates :scope,        inclusion: { in: %w(development runtime) }
+  validates :scope,        inclusion: { in: %w[development runtime] }
 
   attr_accessor :gem_dependency
 
@@ -78,12 +78,12 @@ class Dependency < ActiveRecord::Base
 
     if gem_dependency.class != Gem::Dependency
       errors.add :rubygem, "Please use Gem::Dependency to specify dependencies."
-      return false
+      throw :abort
     end
 
     if gem_dependency.name.empty?
       errors.add :rubygem, "Blank is not a valid dependency name"
-      return false
+      return :abort
     end
 
     true
@@ -95,8 +95,6 @@ class Dependency < ActiveRecord::Base
     self.rubygem = Rubygem.find_by_name(gem_dependency.name)
 
     self.unresolved_name = gem_dependency.name unless rubygem
-
-    true
   end
 
   def parse_gem_dependency

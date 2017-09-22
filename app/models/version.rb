@@ -1,9 +1,9 @@
 require 'digest/sha2'
 
-class Version < ActiveRecord::Base
+class Version < ApplicationRecord
   belongs_to :rubygem, touch: true
   has_many :dependencies, -> { order('rubygems.name ASC').includes(:rubygem) }, dependent: :destroy, inverse_of: "version"
-  has_one :gem_download, proc { |m| where(rubygem_id: m.rubygem_id) }
+  has_one(:gem_download, proc { |m| where(rubygem_id: m.rubygem_id) })
 
   before_save :update_prerelease
   before_validation :full_nameify!
@@ -21,7 +21,7 @@ class Version < ActiveRecord::Base
   validate :authors_format, on: :create
   validate :metadata_links_format
 
-  class AuthorType < Type::String
+  class AuthorType < ActiveModel::Type::String
     def cast_value(value)
       if value.is_a?(Array)
         value.join(', ')
