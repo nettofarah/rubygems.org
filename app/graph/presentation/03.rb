@@ -9,8 +9,8 @@ RubygemType = GraphQL::ObjectType.define do
   field :versions do
     type types[VersionType]
 
-    resolve -> (obj, args, ctx) {
-      obj.versions
+    resolve -> (rubygem, args, ctx) {
+      rubygem.versions
     }
   end
 

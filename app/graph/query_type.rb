@@ -55,7 +55,7 @@ QueryType = GraphQL::ObjectType.define do
     }
   end
 
-  field :by_name do
+  field :rubygem_by_name do
     type RubygemType
     description "Looks up a specific Rubygem by name"
     argument :name, !types.String
